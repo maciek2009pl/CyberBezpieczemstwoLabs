@@ -18,7 +18,7 @@ using PasswordGenerator;
 
 namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
 {
-    [Authorize(Roles = "ADMINISTRATOR, MANAGER")]
+    [Authorize(Roles = "Administrator, Manager")]
     public class UserList : PageModel
     {
         private readonly ApplicationDbContext _dbContext;

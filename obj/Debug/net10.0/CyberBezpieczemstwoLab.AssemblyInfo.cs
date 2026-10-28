@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CyberBezpieczemstwoLab")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+81238992c5f5f3289e2e9769612c1fc8df05ca6f")]
 [assembly: System.Reflection.AssemblyProductAttribute("CyberBezpieczemstwoLab")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CyberBezpieczemstwoLab")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
