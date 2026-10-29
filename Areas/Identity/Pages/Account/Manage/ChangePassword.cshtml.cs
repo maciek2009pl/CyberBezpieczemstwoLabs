@@ -89,12 +89,12 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account.Manage
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
+
             var hasPassword = await _userManager.HasPasswordAsync(user);
             if (!hasPassword)
             {
                 return RedirectToPage("./SetPassword");
             }
-
             return Page();
         }
 
@@ -104,13 +104,13 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account.Manage
             {
                 return Page();
             }
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
-
+            
+            
             var changePasswordResult = await _userManager.ChangePasswordAsync(user, Input.OldPassword, Input.NewPassword);
             if (!changePasswordResult.Succeeded)
             {
@@ -121,10 +121,9 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account.Manage
                 return Page();
             }
 
-            await _signInManager.RefreshSignInAsync(user);
-            _logger.LogInformation("User changed their password successfully.");
+           
+           await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Your password has been changed.";
-
             return RedirectToPage();
         }
     }

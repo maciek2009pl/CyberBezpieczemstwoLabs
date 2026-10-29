@@ -41,7 +41,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
         {
             _userManager = userManager;
             _userStore = userStore;
-            _emailStore = GetEmailStore();
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
@@ -117,14 +116,13 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                     UserName = Input.Login,
                     Email = Input.Email
                 };                
-                
                 var result = await _userManager.CreateAsync(user,Input.Password);
-
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User created a new account with password.");
+                    _logger.LogInformation("User created a new account.");
                     
                     await _userManager.AddToRoleAsync(user,"GOSC");
+
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -147,22 +145,15 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                         await _signInManager.SignInAsync(user, isPersistent: false);
                         return LocalRedirect(returnUrl);
                     }
+                    
                 }
+
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
             return Page();
-        }
-
-        private IUserEmailStore<AppUsers> GetEmailStore()
-        {
-            if (!_userManager.SupportsUserEmail)
-            {
-                throw new NotSupportedException("The default UI requires a user store with email support.");
-            }
-            return (IUserEmailStore<AppUsers>)_userStore;
         }
     }
 }

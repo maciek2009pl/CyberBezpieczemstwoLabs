@@ -40,17 +40,16 @@ else
                     <td>@user.Login</td>
                     <td>@user.Email</td>
                     <td>@string.Join(", ", user.Roles)</td>
-                    <td>
-                        <button type="button"
+                    <td><button type="button"
                                 class="btn btn-primary"
                                 data-bs-toggle="modal"
                                 data-bs-target="#userEditModal"
                                 data-user-id="@user.Id"
                                 data-login="@user.Login"
                                 data-email="@user.Email"
-                                data-role="@user.Roles.FirstOrDefault()">
-                            Edit
-                        </button>
+                                data-role="@user.Roles.FirstOrDefault()">Edit</button>
+
+                                
                         @if (User.IsInRole("Administrator"))
                         {
                             <form method="post" asp-page-handler="Remove" class="d-inline">
@@ -73,6 +72,7 @@ else
                     <h2 class="modal-title" id="userEditModalLabel">Edit user</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+
                 <div class="modal-body">
                     <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                     <input asp-for="Input.UserId" type="hidden" />
@@ -81,11 +81,13 @@ else
                         <input asp-for="Input.Login" class="form-control" autocomplete="username" />
                         <span asp-validation-for="Input.Login" class="text-danger"></span>
                     </div>
+
                     <div class="mb-3">
                         <label asp-for="Input.Email" class="form-label">Email</label>
                         <input asp-for="Input.Email" class="form-control" autocomplete="email" />
                         <span asp-validation-for="Input.Email" class="text-danger"></span>
                     </div>
+
                     <fieldset>
                         <legend class="col-form-label">Roles</legend>
                         @for (var index = 0; index < Model.AvailableRoles.Count; index++)
@@ -105,6 +107,7 @@ else
                         <span asp-validation-for="Input.Role" class="text-danger"></span>
                     </fieldset>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save changes</button>
@@ -122,6 +125,7 @@ else
                     <h2 class="modal-title fs-5" id="userAddModalLabel">Add user</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+
                 <div class="modal-body">
                     <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                     <div class="mb-3">
@@ -129,11 +133,13 @@ else
                         <input asp-for="NewUser.Login" class="form-control" autocomplete="username" />
                         <span asp-validation-for="NewUser.Login" class="text-danger"></span>
                     </div>
+                    
                     <div class="mb-3">
                         <label asp-for="NewUser.Email" class="form-label">Email</label>
                         <input asp-for="NewUser.Email" class="form-control" autocomplete="email" />
                         <span asp-validation-for="NewUser.Email" class="text-danger"></span>
                     </div>
+
                     <fieldset>
                         <legend class="col-form-label">Role</legend>
                         @for (var index = 0; index < Model.AvailableRoles.Count; index++)
@@ -153,6 +159,7 @@ else
                         <span asp-validation-for="NewUser.Role" class="text-danger"></span>
                     </fieldset>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-success">Save User</button>
@@ -172,6 +179,7 @@ else
                 return;
             }
 
+
             document.getElementById("Input_UserId").value = button.dataset.userId;
             document.getElementById("Input_Login").value = button.dataset.login ?? "";
             document.getElementById("Input_Email").value = button.dataset.email ?? "";
@@ -182,13 +190,13 @@ else
             });
         });
 
+
         @if (Model.ShowAddModal)
         {
             <text>
                 new bootstrap.Modal(addModal).show();
             </text>
         }
-
         @if (Model.ShowEditModal)
         {
             <text>

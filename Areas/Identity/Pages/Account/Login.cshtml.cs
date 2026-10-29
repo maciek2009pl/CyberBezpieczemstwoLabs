@@ -27,7 +27,12 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
         private readonly SignInManager<AppUsers> _signInManager;
         private readonly UserManager<AppUsers> _userManager;
         private readonly ILogger<LoginModel> _logger;
-
+         [BindProperty]
+        public InputModel Input { get; set; }
+        public IList<AuthenticationScheme> ExternalLogins { get; set; }
+        public string ReturnUrl { get; set; }
+        [TempData]
+        public string ErrorMessage { get; set; }
         public LoginModel(
             SignInManager<AppUsers> signInManager,
             UserManager<AppUsers> userManager,
@@ -38,28 +43,15 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             _logger = logger;
         }
 
-        [BindProperty]
-        public InputModel Input { get; set; }
-
-        public IList<AuthenticationScheme> ExternalLogins { get; set; }
-
-        public string ReturnUrl { get; set; }
-
-        [TempData]
-        public string ErrorMessage { get; set; }
 
         public class InputModel
         {
 
             [Required]
             public string Login { get; set; }
-
-
             [Required]
             [DataType(DataType.Password)]
             public string Password { get; set; }
-
-
             [Display(Name = "Remember me?")]
             public bool RememberMe { get; set; }
         }
@@ -70,13 +62,10 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             {
                 ModelState.AddModelError(string.Empty, ErrorMessage);
             }
-
             returnUrl ??= Url.Content("~/");
 
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
             ReturnUrl = returnUrl;
         }
 
@@ -97,6 +86,7 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                     return Page();
                 }
 
+
                 var result = await _signInManager.PasswordSignInAsync(Input.Login, Input.Password, Input.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
@@ -106,6 +96,7 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                             claim.Value == "true"))
                     {
                         await _signInManager.SignOutAsync();
+
 
                         var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
                         var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(resetToken));
@@ -119,14 +110,17 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }
+
                 if (result.RequiresTwoFactor)
                 {
                     return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
                 }
+
                 if (result.IsLockedOut)
                 {
                     return RedirectToPage("./Lockout");
                 }
+
                 else
                 {
                     ModelState.AddModelError(string.Empty, "Invalid login or password.");
@@ -147,14 +141,15 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                 return false;
             }
 
+
             var expiryClaim = userClaims
                 .FirstOrDefault(claim =>
                     claim.Type == AppUsers.TemporaryPasswordExpiresAtClaimType);
-
             if (expiryClaim is null)
             {
                 return false;
             }
+
 
             return !DateTimeOffset.TryParse(
                        expiryClaim.Value,

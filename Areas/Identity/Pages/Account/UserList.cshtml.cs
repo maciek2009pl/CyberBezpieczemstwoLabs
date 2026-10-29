@@ -27,20 +27,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
         private readonly IConfiguration _configuration;
         private readonly ILogger<UserList> _logger;
 
-        public UserList(
-            ApplicationDbContext dbContext,
-            UserManager<AppUsers> userManager,
-            RoleManager<IdentityRole> roleManager,
-            IConfiguration configuration,
-            ILogger<UserList> logger)
-        {
-            _dbContext = dbContext;
-            _userManager = userManager;
-            _roleManager = roleManager;
-            _configuration = configuration;
-            _logger = logger;
-        }
-
         [BindProperty]
         public EditUserInput Input { get; set; } = new();
 
@@ -58,11 +44,21 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
         [TempData]
         public string? StatusMessage { get; set; }
 
-        public async Task OnGetAsync()
+        public UserList(
+            ApplicationDbContext dbContext,
+            UserManager<AppUsers> userManager,
+            RoleManager<IdentityRole> roleManager,
+            IConfiguration configuration,
+            ILogger<UserList> logger)
         {
-            await LoadUsersAsync();
+            _dbContext = dbContext;
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _configuration = configuration;
+            _logger = logger;
         }
 
+        
         public async Task<IActionResult> OnPostUpdateAsync()
         {
             RemoveModelStateFor(nameof(NewUser));
@@ -88,9 +84,7 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             var currentRoles = await _userManager.GetRolesAsync(user);
             var rolesToRemove = currentRoles.Except(requestedRoles, StringComparer.Ordinal).ToArray();
             var rolesToAdd = requestedRoles.Except(currentRoles, StringComparer.Ordinal).ToArray();
-
             await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
             user.UserName = Input.Login.Trim();
             user.Email = Input.Email.Trim();
             var updateResult = await _userManager.UpdateAsync(user);
@@ -100,7 +94,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             {
                 succeeded = AddIdentityErrors(await _userManager.RemoveFromRolesAsync(user, rolesToRemove));
             }
-
             if (succeeded && rolesToAdd.Length > 0)
             {
                 succeeded = AddIdentityErrors(await _userManager.AddToRolesAsync(user, rolesToAdd));
@@ -117,7 +110,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             {
                 return await RedisplayAddUserAsync();
             }
-
             var validRoles = await GetAvailableRolesAsync();
             if (!validRoles.Contains(NewUser.Role, StringComparer.Ordinal))
             {
@@ -135,7 +127,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                 UserName = NewUser.Login.Trim(),
                 Email = NewUser.Email.Trim(),
             };
-
             await using var transaction = await _dbContext.Database.BeginTransactionAsync();
             var createResult = await _userManager.CreateAsync(user, password);
             if (!AddIdentityErrors(createResult))
@@ -159,7 +150,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                 await transaction.RollbackAsync();
                 return await RedisplayAddUserAsync();
             }
-
             var expiryClaimResult = await _userManager.AddClaimAsync(
                 user,
                 new Claim(
@@ -195,7 +185,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             {
                 Text = $"Your password is: {password}\n\nPassword is valid until {passwordExpiresAt.ToLocalTime():g}."
             };
-
             using var smtpClient = new SmtpClient();
             await smtpClient.ConnectAsync(host, port, SecureSocketOptions.None);
             await smtpClient.SendAsync(message);
@@ -208,7 +197,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             {
                 return Challenge();
             }
-
             if (!User.IsInRole("Administrator"))
             {
                 return Forbid();
@@ -227,7 +215,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                 await LoadUsersAsync();
                 return Page();
             }
-
             StatusMessage = "User removed successfully.";
             return RedirectToPage();
         }
@@ -258,6 +245,7 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             }
         }
 
+
         private async Task LoadUsersAsync()
         {
             AvailableRoles = await GetAvailableRolesAsync();
@@ -283,6 +271,7 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                 .ToListAsync();
         }
 
+
         private bool AddIdentityErrors(IdentityResult result)
         {
             foreach (var error in result.Errors)
@@ -297,16 +286,13 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
         {
             [Required]
             public string UserId { get; set; } = string.Empty;
-
             [Required]
             [StringLength(256)]
             public string Login { get; set; } = string.Empty;
-
             [Required]
             [EmailAddress]
             [StringLength(256)]
             public string Email { get; set; } = string.Empty;
-
             public string? Role { get; set; }
         }
 
@@ -315,12 +301,10 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             [Required]
             [StringLength(256)]
             public string Login { get; set; } = string.Empty;
-
             [Required]
             [EmailAddress]
             [StringLength(256)]
             public string Email { get; set; } = string.Empty;
-
             [Required]
             public string Role { get; set; } = string.Empty;
         }
