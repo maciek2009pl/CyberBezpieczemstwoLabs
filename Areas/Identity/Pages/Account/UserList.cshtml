@@ -6,11 +6,6 @@
 
 <h1>@ViewData["Title"]</h1>
 
-@if (!string.IsNullOrEmpty(Model.StatusMessage))
-{
-    <div class="alert alert-success" role="status">@Model.StatusMessage</div>
-}
-
 <div asp-validation-summary="All" class="text-danger" role="alert"></div>
 
 <button type="button" class="btn btn-success mb-3"
@@ -18,56 +13,51 @@
     Add User
 </button>
 
-@if (Model.Users.Count == 0)
-{
-    <p>No users found.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col">Login</th>
-                <th scope="col">Email</th>
-                <th scope="col">Role</th>
-                <th scope="col">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var user in Model.Users)
-            {
-                <tr>
-                    <td>@user.Login</td>
-                    <td>@user.Email</td>
-                    <td>@string.Join(", ", user.Roles)</td>
-                    <td><button type="button"
-                                class="btn btn-primary"
-                                data-bs-toggle="modal"
-                                data-bs-target="#userEditModal"
-                                data-user-id="@user.Id"
-                                data-login="@user.Login"
-                                data-email="@user.Email"
-                                data-role="@user.Roles.FirstOrDefault()">Edit</button>
 
-                                
-                        @if (User.IsInRole("Administrator"))
-                        {
-                            <form method="post" asp-page-handler="Remove" class="d-inline">
-                                <input type="hidden" name="userId" value="@user.Id" />
-                                <button type="submit" class="btn btn-danger">Remove</button>
-                            </form>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Login</th>
+            <th scope="col">Email</th>
+            <th scope="col">Role</th>
+            <th scope="col">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model.Users)
+        {
+            <tr>
+                <td>@user.Login</td>
+                <td>@user.Email</td>
+                <td>@string.Join(", ", user.Roles)</td>
+                <td><button type="button"
+                            class="btn btn-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#userEditModal"
+                            data-user-id="@user.Id"
+                            data-login="@user.Login"
+                            data-email="@user.Email"
+                            data-role="@user.Roles.FirstOrDefault()">Edit</button>
+
+                            
+                    @if (User.IsInRole("Administrator"))
+                    {
+                        <form method="post" asp-page-handler="Remove" class="d-inline">
+                            <input type="hidden" name="userId" value="@user.Id" />
+                            <button type="submit" class="btn btn-danger">Remove</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
 
 <div class="modal fade" id="userEditModal" aria-labelledby="userEditModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="post" asp-page-handler="Update">
+            <form method="post" asp-page-handler="Edit">
                 <div class="modal-header">
                     <h2 class="modal-title" id="userEditModalLabel">Edit user</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

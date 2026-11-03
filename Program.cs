@@ -14,11 +14,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
 });
 
-
 builder.Services.AddDefaultIdentity<AppUsers>(options => options.SignIn.RequireConfirmedAccount = false)
         .AddRoles<IdentityRole>()
         .AddEntityFrameworkStores<ApplicationDbContext>();
-        
+
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.ExpireTimeSpan = TimeSpan.FromDays(30);
@@ -43,10 +42,12 @@ builder.Services.AddSession(options =>
 builder.Services.Configure<IdentityOptions> (options =>
 {
     options.Password.RequiredLength = 12;
-    options.Lockout.MaxFailedAccessAttempts = 5;
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    options.Lockout.MaxFailedAccessAttempts = 3;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.AllowedForNewUsers = true;
 });
+
+
 
 var app = builder.Build();
 
@@ -55,8 +56,6 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
-
-
 
 app.UseHttpsRedirection();
 

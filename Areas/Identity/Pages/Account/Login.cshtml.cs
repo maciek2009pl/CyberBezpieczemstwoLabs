@@ -7,7 +7,9 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
@@ -58,10 +60,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
-            if (!string.IsNullOrEmpty(ErrorMessage))
-            {
-                ModelState.AddModelError(string.Empty, ErrorMessage);
-            }
             returnUrl ??= Url.Content("~/");
 
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
@@ -71,6 +69,22 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
+            string secret = "0x4AAAAAAFyViBfxA64QyMoY0ze2VDUfOBs";
+            string clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+            string browserChallengeToken = null;
+            if (this.Request.Form.TryGetValue("cf-turnstile-response", out var hiddenFormField))
+            {
+                browserChallengeToken = hiddenFormField;
+            }
+            
+            var turnstileApi = new TurnstileService();
+            var verifyResult = await turnstileApi.VerifyAsync(browserChallengeToken, secret, clientIp);
+            if (verifyResult.IsSuccess is false)
+            {
+                this.ModelState.AddModelError("captcha", "The Cloudflare challenge is not valid.");
+                return new BadRequestResult();
+            }
+
             returnUrl ??= Url.Content("~/");
 
             if (ModelState.IsValid)
@@ -158,5 +172,8 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                        out var expiresAt) ||
                    expiresAt <= DateTimeOffset.UtcNow;
         }
+
     }
+
+    
 }

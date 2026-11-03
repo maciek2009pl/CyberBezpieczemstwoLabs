@@ -27,6 +27,34 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
         private readonly IConfiguration _configuration;
         private readonly ILogger<UserList> _logger;
 
+        public sealed class EditUserInput
+        {
+            [Required]
+            public string UserId { get; set; } = string.Empty;
+            [Required]
+            [StringLength(256)]
+            public string Login { get; set; } = string.Empty;
+            [Required]
+            [EmailAddress]
+            [StringLength(256)]
+            public string Email { get; set; } = string.Empty;
+            public string? Role { get; set; }
+        }
+
+        public sealed class AddUserInput
+        {
+            [Required]
+            [StringLength(256)]
+            public string Login { get; set; } = string.Empty;
+            [Required]
+            [EmailAddress]
+            [StringLength(256)]
+            public string Email { get; set; } = string.Empty;
+            [Required]
+            public string Role { get; set; } = string.Empty;
+        }
+
+
         [BindProperty]
         public EditUserInput Input { get; set; } = new();
 
@@ -41,8 +69,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
 
         public bool ShowAddModal { get; private set; }
 
-        [TempData]
-        public string? StatusMessage { get; set; }
 
         public UserList(
             ApplicationDbContext dbContext,
@@ -59,13 +85,9 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
         }
 
         
-        public async Task<IActionResult> OnPostUpdateAsync()
+        public async Task<IActionResult> OnPostEditAsync()
         {
             RemoveModelStateFor(nameof(NewUser));
-            if (!ModelState.IsValid)
-            {
-                return await RedisplayAsync();
-            }
 
             var user = await _userManager.FindByIdAsync(Input.UserId);
             if (user is null)
@@ -99,17 +121,12 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                 succeeded = AddIdentityErrors(await _userManager.AddToRolesAsync(user, rolesToAdd));
             }
             await transaction.CommitAsync();
-            StatusMessage = "User updated successfully.";
             return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostAddAsync()
         {
             ModelState.Clear();
-            if (!TryValidateModel(NewUser, nameof(NewUser)))
-            {
-                return await RedisplayAddUserAsync();
-            }
             var validRoles = await GetAvailableRolesAsync();
             if (!validRoles.Contains(NewUser.Role, StringComparer.Ordinal))
             {
@@ -128,28 +145,12 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                 Email = NewUser.Email.Trim(),
             };
             await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            
             var createResult = await _userManager.CreateAsync(user, password);
-            if (!AddIdentityErrors(createResult))
-            {
-                await transaction.RollbackAsync();
-                return await RedisplayAddUserAsync();
-            }
-
             var roleResult = await _userManager.AddToRoleAsync(user, NewUser.Role);
-            if (!AddIdentityErrors(roleResult))
-            {
-                await transaction.RollbackAsync();
-                return await RedisplayAddUserAsync();
-            }
-
             var claimResult = await _userManager.AddClaimAsync(
                 user,
                 new Claim(AppUsers.MustChangePasswordClaimType, "true"));
-            if (!AddIdentityErrors(claimResult))
-            {
-                await transaction.RollbackAsync();
-                return await RedisplayAddUserAsync();
-            }
             var expiryClaimResult = await _userManager.AddClaimAsync(
                 user,
                 new Claim(
@@ -164,7 +165,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
 
             await SendGeneratedPasswordEmailAsync(user.Email!, password, passwordExpiresAt);
             await transaction.CommitAsync();
-            StatusMessage = "User created successfully.";
             return RedirectToPage();
         }
 
@@ -215,7 +215,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                 await LoadUsersAsync();
                 return Page();
             }
-            StatusMessage = "User removed successfully.";
             return RedirectToPage();
         }
 
@@ -235,10 +234,10 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             return Page();
         }
 
-        private void RemoveModelStateFor(string prefix)
+        private void RemoveModelStateFor(string pref)
         {
             foreach (var key in ModelState.Keys
-                         .Where(key => key.StartsWith($"{prefix}.", StringComparison.Ordinal))
+                         .Where(key => key.StartsWith($"{pref}.", StringComparison.Ordinal))
                          .ToArray())
             {
                 ModelState.Remove(key);
@@ -282,31 +281,5 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             return result.Succeeded;
         }
 
-        public sealed class EditUserInput
-        {
-            [Required]
-            public string UserId { get; set; } = string.Empty;
-            [Required]
-            [StringLength(256)]
-            public string Login { get; set; } = string.Empty;
-            [Required]
-            [EmailAddress]
-            [StringLength(256)]
-            public string Email { get; set; } = string.Empty;
-            public string? Role { get; set; }
-        }
-
-        public sealed class AddUserInput
-        {
-            [Required]
-            [StringLength(256)]
-            public string Login { get; set; } = string.Empty;
-            [Required]
-            [EmailAddress]
-            [StringLength(256)]
-            public string Email { get; set; } = string.Empty;
-            [Required]
-            public string Role { get; set; } = string.Empty;
-        }
     }
 }

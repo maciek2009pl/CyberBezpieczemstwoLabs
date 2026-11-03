@@ -1,9 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "X6mkW8cgfzU=",
+  "dgSpecHash": "W7Kw3M0QOao=",
   "success": true,
   "projectFilePath": "C:\\Users\\Kasia\\Desktop\\CyberBezpieczemstwoLab\\CyberBezpieczemstwoLab.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\Kasia\\.nuget\\packages\\aspnetcore.recaptcha\\1.8.2\\aspnetcore.recaptcha.1.8.2.nupkg.sha512",
+    "C:\\Users\\Kasia\\.nuget\\packages\\bitarmory.turnstile\\1.0.1\\bitarmory.turnstile.1.0.1.nupkg.sha512",
     "C:\\Users\\Kasia\\.nuget\\packages\\bouncycastle.cryptography\\2.7.0\\bouncycastle.cryptography.2.7.0.nupkg.sha512",
     "C:\\Users\\Kasia\\.nuget\\packages\\humanizer\\2.14.1\\humanizer.2.14.1.nupkg.sha512",
     "C:\\Users\\Kasia\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
@@ -124,7 +126,8 @@
     "C:\\Users\\Kasia\\.nuget\\packages\\system.data.datasetextensions\\4.5.0\\system.data.datasetextensions.4.5.0.nupkg.sha512",
     "C:\\Users\\Kasia\\.nuget\\packages\\system.reflection.metadataloadcontext\\8.0.0\\system.reflection.metadataloadcontext.8.0.0.nupkg.sha512",
     "C:\\Users\\Kasia\\.nuget\\packages\\system.security.cryptography.pkcs\\10.0.13\\system.security.cryptography.pkcs.10.0.13.nupkg.sha512",
-    "C:\\Users\\Kasia\\.nuget\\packages\\system.security.cryptography.protecteddata\\9.0.6\\system.security.cryptography.protecteddata.9.0.6.nupkg.sha512"
+    "C:\\Users\\Kasia\\.nuget\\packages\\system.security.cryptography.protecteddata\\9.0.6\\system.security.cryptography.protecteddata.9.0.6.nupkg.sha512",
+    "C:\\Users\\Kasia\\.nuget\\packages\\turnstile.net\\1.0.0\\turnstile.net.1.0.0.nupkg.sha512"
   ],
   "logs": []
 }

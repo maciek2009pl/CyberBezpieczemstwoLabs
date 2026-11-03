@@ -2,6 +2,36 @@
   "version": 3,
   "targets": {
     "net10.0": {
+      "AspNetCore.ReCaptcha/1.8.2": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/AspNetCore.ReCaptcha.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/AspNetCore.ReCaptcha.dll": {}
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ],
+        "resource": {
+          "lib/net6.0/nl/AspNetCore.ReCaptcha.resources.dll": {
+            "locale": "nl"
+          }
+        }
+      },
+      "BitArmory.Turnstile/1.0.1": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/BitArmory.Turnstile.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/BitArmory.Turnstile.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "BouncyCastle.Cryptography/2.7.0": {
         "type": "package",
         "compile": {
@@ -2298,10 +2328,52 @@
         "build": {
           "buildTransitive/net8.0/_._": {}
         }
+      },
+      "Turnstile.Net/1.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Turnstile.Net.dll": {}
+        },
+        "runtime": {
+          "lib/net8.0/Turnstile.Net.dll": {}
+        }
       }
     }
   },
   "libraries": {
+    "AspNetCore.ReCaptcha/1.8.2": {
+      "sha512": "e3ICvar4SoaIuoHG22HZ31/c4ukcUBKrRO40x/XHfubmijor82ph43+XJQsc5vufEt9jvfk3j1Yre3kc5tmi4g==",
+      "type": "package",
+      "path": "aspnetcore.recaptcha/1.8.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "aspnetcore.recaptcha.1.8.2.nupkg.sha512",
+        "aspnetcore.recaptcha.nuspec",
+        "lib/net6.0/AspNetCore.ReCaptcha.dll",
+        "lib/net6.0/nl/AspNetCore.ReCaptcha.resources.dll",
+        "logo.png"
+      ]
+    },
+    "BitArmory.Turnstile/1.0.1": {
+      "sha512": "r9suY+9ppbs1THuvhrWPMivlrcNSfB8orkR+CFKIxCeinsNg3MIAIH8CYFETrOyrBqOfXrhQCKVwM9P7T6usWA==",
+      "type": "package",
+      "path": "bitarmory.turnstile/1.0.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "bitarmory.turnstile.1.0.1.nupkg.sha512",
+        "bitarmory.turnstile.nuspec",
+        "icon.png",
+        "lib/net45/BitArmory.Turnstile.dll",
+        "lib/net45/BitArmory.Turnstile.xml",
+        "lib/netstandard1.3/BitArmory.Turnstile.dll",
+        "lib/netstandard1.3/BitArmory.Turnstile.xml",
+        "lib/netstandard2.0/BitArmory.Turnstile.dll",
+        "lib/netstandard2.0/BitArmory.Turnstile.xml"
+      ]
+    },
     "BouncyCastle.Cryptography/2.7.0": {
       "sha512": "U+12df8UEWHgBi04YVf/Lgi2dy3SItlIYvHjjEVa/BngCQIzDCDRBk50DDByCfDvSbe5pRNFr3b7UrVK2kMcLw==",
       "type": "package",
@@ -6077,10 +6149,27 @@
         "system.security.cryptography.protecteddata.nuspec",
         "useSharedDesignerContext.txt"
       ]
+    },
+    "Turnstile.Net/1.0.0": {
+      "sha512": "kn+H2Ahy/tkj+QvHc0A1pL09wa0jR2uBsd3XaBDGfF6mR0h++seD3As/jRrPXaCA3kivq6PUbp/yl5mhdYXa7A==",
+      "type": "package",
+      "path": "turnstile.net/1.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENCE.txt",
+        "Logo_Only.png",
+        "Readme.md",
+        "lib/net8.0/Turnstile.Net.dll",
+        "turnstile.net.1.0.0.nupkg.sha512",
+        "turnstile.net.nuspec"
+      ]
     }
   },
   "projectFileDependencyGroups": {
     "net10.0": [
+      "AspNetCore.ReCaptcha >= 1.8.2",
+      "BitArmory.Turnstile >= 1.0.1",
       "Konscious.Security.Cryptography.Argon2 >= 1.3.1",
       "MailKit >= 4.18.2",
       "Microsoft.AspNetCore.Identity.EntityFrameworkCore >= 10.0.14",
@@ -6091,7 +6180,8 @@
       "Microsoft.VisualStudio.Web.CodeGeneration.Design >= 10.0.2",
       "NuGet.Packaging >= 6.14.3",
       "NuGet.Protocol >= 6.14.3",
-      "PasswordGenerator >= 3.0.0"
+      "PasswordGenerator >= 3.0.0",
+      "Turnstile.Net >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -6144,6 +6234,14 @@
       "net10.0": {
         "targetAlias": "net10.0",
         "dependencies": {
+          "AspNetCore.ReCaptcha": {
+            "target": "Package",
+            "version": "[1.8.2, )"
+          },
+          "BitArmory.Turnstile": {
+            "target": "Package",
+            "version": "[1.0.1, )"
+          },
           "Konscious.Security.Cryptography.Argon2": {
             "target": "Package",
             "version": "[1.3.1, )"
@@ -6191,6 +6289,10 @@
           "PasswordGenerator": {
             "target": "Package",
             "version": "[3.0.0, )"
+          },
+          "Turnstile.Net": {
+            "target": "Package",
+            "version": "[1.0.0, )"
           }
         },
         "imports": [
