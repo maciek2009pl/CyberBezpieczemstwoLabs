@@ -8,7 +8,7 @@ namespace CyberBezpieczemstwoLab
 {
     public class TurnstileService
     {
-        public async Task<TurnstileVerificationResult> VerifyAsync(string token, string secret, string remoteIp = null)
+        public async Task<TurnstileVerificationResult> VerifyAsync(string token, string secret, string remoteIp)
         {
             if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(secret))
             {
