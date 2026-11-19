@@ -10,5 +10,6 @@ namespace CyberBezpieczemstwoLab.Models
     {
         public const string MustChangePasswordClaimType = "MustChangePassword";
         public const string TemporaryPasswordExpiresAtClaimType = "TemporaryPasswordExpiresAt";
+        public const string CanaryAccountClaimType = "CanaryAccount";
     }
 }

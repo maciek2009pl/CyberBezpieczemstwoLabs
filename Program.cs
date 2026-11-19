@@ -26,6 +26,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddRazorPages();
 builder.Services.AddDistributedMemoryCache();
+builder.Services.AddScoped<CanaryLoginAlert>();
 
 builder.Services.AddScoped<
     IPasswordValidator<AppUsers>,

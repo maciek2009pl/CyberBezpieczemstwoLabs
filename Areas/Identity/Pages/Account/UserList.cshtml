@@ -8,6 +8,8 @@
 
 <div asp-validation-summary="All" class="text-danger" role="alert"></div>
 
+<a asp-page-handler="Download" class="btn btn-primary mb-3">Download database</a>
+
 <button type="button" class="btn btn-success mb-3"
         data-bs-toggle="modal" data-bs-target="#userAddModal">
     Add User
@@ -37,6 +39,7 @@
                             data-user-id="@user.Id"
                             data-login="@user.Login"
                             data-email="@user.Email"
+                            data-is-canary-account="@Model.CanaryAccountUserIds.Contains(user.Id).ToString().ToLowerInvariant()"
                             data-role="@user.Roles.FirstOrDefault()">Edit</button>
 
                             
@@ -76,6 +79,11 @@
                         <label asp-for="Input.Email" class="form-label">Email</label>
                         <input asp-for="Input.Email" class="form-control" autocomplete="email" />
                         <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="Input.IsCanaryAccount" class="form-check-input" />
+                        <label asp-for="Input.IsCanaryAccount" class="form-check-label">Canary account</label>
                     </div>
 
                     <fieldset>
@@ -173,6 +181,7 @@
             document.getElementById("Input_UserId").value = button.dataset.userId;
             document.getElementById("Input_Login").value = button.dataset.login ?? "";
             document.getElementById("Input_Email").value = button.dataset.email ?? "";
+            document.getElementById("Input_IsCanaryAccount").checked = button.dataset.isCanaryAccount === "true";
 
             const selectedRole = button.dataset.role ?? "";
             editModal.querySelectorAll(".user-role-radio").forEach(radio => {

@@ -4,7 +4,45 @@
     ViewData["Title"] = "Locked out";
 }
 
-<header>
+<div>
     <h1 class="text-danger">@ViewData["Title"]</h1>
-    <p class="text-danger">This account has been locked out, please try again later.</p>
-</header>
+    @if (Model.RemainingSeconds is int remainingSeconds)
+    {
+        var minutes = Model.RemainingSeconds / 60;
+        var seconds = remainingSeconds % 60;
+        <p class="text-danger">
+            This account is locked. Try again in
+            <text id="lockout-countdown" data-remaining-seconds="@remainingSeconds">@minutes:@seconds</text>.
+        </p>
+    }
+</div>
+
+@section Scripts
+{
+    <script>
+        (() => {
+            const countdown = document.getElementById("lockout-countdown");
+            if (!countdown) {
+                return;
+            }
+
+            let remainingSeconds = Number(countdown.dataset.remainingSeconds);
+            let timer;
+
+            const updateCountdown = () => {
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                countdown.textContent = `${minutes}:${String(seconds).padStart(2, "0")}`;
+
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                } else {
+                    window.clearInterval(timer);
+                }
+            };
+
+            updateCountdown();
+            timer = window.setInterval(updateCountdown, 1000);
+        })();
+    </script>
+}

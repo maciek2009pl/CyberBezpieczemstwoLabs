@@ -10,30 +10,19 @@ namespace CyberBezpieczemstwoLab
     {
         public async Task<TurnstileVerificationResult> VerifyAsync(string token, string secret, string remoteIp)
         {
-            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(secret))
-            {
-                return new TurnstileVerificationResult { IsSuccess = false };
-            }
-
-
             try
             {
                 var fields = new Dictionary<string, string>
                 {
                     ["secret"] = secret,
-                    ["response"] = token
+                    ["response"] = token,
+                    ["remoteip"] = remoteIp
                 };
-
-                if (!string.IsNullOrWhiteSpace(remoteIp))
-                {
-                    fields["remoteip"] = remoteIp;
-                }
 
                 using var client = new HttpClient();
                 using var response = await client.PostAsync(
                     "https://challenges.cloudflare.com/turnstile/v0/siteverify",
                     new FormUrlEncodedContent(fields));
-
 
                 using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
                 var isSuccess = json.RootElement.TryGetProperty("success", out var success) &&
@@ -41,7 +30,7 @@ namespace CyberBezpieczemstwoLab
 
                 return new TurnstileVerificationResult { IsSuccess = isSuccess };
             }
-             catch (Exception ex) when  (ex is HttpRequestException || ex is JsonException)
+            catch (Exception)
             {
                 return new TurnstileVerificationResult { IsSuccess = false };
             }

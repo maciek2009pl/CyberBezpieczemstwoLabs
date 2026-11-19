@@ -8,6 +8,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -28,27 +29,28 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<AppUsers> _signInManager;
         private readonly UserManager<AppUsers> _userManager;
+        private readonly CanaryLoginAlert _canaryLoginAlert;
         private readonly ILogger<LoginModel> _logger;
          [BindProperty]
         public InputModel Input { get; set; }
-        public IList<AuthenticationScheme> ExternalLogins { get; set; }
         public string ReturnUrl { get; set; }
         [TempData]
         public string ErrorMessage { get; set; }
         public LoginModel(
             SignInManager<AppUsers> signInManager,
             UserManager<AppUsers> userManager,
+            CanaryLoginAlert canaryLoginAlert,
             ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
             _userManager = userManager;
+            _canaryLoginAlert = canaryLoginAlert;
             _logger = logger;
         }
 
 
         public class InputModel
         {
-
             [Required]
             public string Login { get; set; }
             [Required]
@@ -56,6 +58,7 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             public string Password { get; set; }
             [Display(Name = "Remember me?")]
             public bool RememberMe { get; set; }
+            public string Honeypot { get; set; }
         }
 
         public async Task OnGetAsync(string returnUrl = null)
@@ -63,14 +66,13 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             returnUrl ??= Url.Content("~/");
 
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             ReturnUrl = returnUrl;
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             string secret = "0x4AAAAAAFyViBfxA64QyMoY0ze2VDUfOBs";
-            string clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+            string clientIp = HttpContext.Connection.RemoteIpAddress.ToString();
             string browserChallengeToken = null;
             if (this.Request.Form.TryGetValue("cf-turnstile-response", out var hiddenFormField))
             {
@@ -85,7 +87,7 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                 return new BadRequestResult();
             }
 
-            returnUrl ??= Url.Content("~/");
+            returnUrl = Url.Content("~/");
 
             if (ModelState.IsValid)
             {
@@ -104,8 +106,23 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                 var result = await _signInManager.PasswordSignInAsync(Input.Login, Input.Password, Input.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
-                    if (user is not null &&
-                        (await _userManager.GetClaimsAsync(user)).Any(claim =>
+                    if(Input.Honeypot is not null)
+                    {
+                        ModelState.AddModelError(string.Empty, "Invalid login or password.");
+                        return Page();
+                    }
+
+                    var userClaims = user is null
+                        ? new List<Claim>()
+                        : (await _userManager.GetClaimsAsync(user)).ToList();
+                    if (userClaims.Any(claim =>
+                            claim.Type == AppUsers.CanaryAccountClaimType &&
+                            claim.Value == "true"))
+                    {
+                        await _canaryLoginAlert.SendCanaryUsedAsync(user.UserName);
+                    }
+
+                    if (userClaims.Any(claim =>
                             claim.Type == AppUsers.MustChangePasswordClaimType &&
                             claim.Value == "true"))
                     {
@@ -125,14 +142,10 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
                     return LocalRedirect(returnUrl);
                 }
 
-                if (result.RequiresTwoFactor)
-                {
-                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
-                }
-
                 if (result.IsLockedOut)
                 {
-                    return RedirectToPage("./Lockout");
+                    var lockedUser = await _userManager.FindByNameAsync(Input.Login);
+                    return RedirectToPage("./Lockout", new { lockoutEnd = lockedUser.LockoutEnd });
                 }
 
                 else

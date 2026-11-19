@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using System.Net.Sockets;
 using System.Security.Claims;
 using CyberBezpieczemstwoLab.Models;
-using MailKit;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using MimeKit;
 using PasswordGenerator;
 
@@ -25,8 +22,7 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
         private readonly UserManager<AppUsers> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<UserList> _logger;
-
+        private readonly IWebHostEnvironment _environment;
         public sealed class EditUserInput
         {
             [Required]
@@ -39,6 +35,7 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             [StringLength(256)]
             public string Email { get; set; } = string.Empty;
             public string? Role { get; set; }
+            public bool IsCanaryAccount { get; set; }
         }
 
         public sealed class AddUserInput
@@ -65,6 +62,8 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
 
         public IList<string> AvailableRoles { get; private set; } = [];
 
+        public ISet<string> CanaryAccountUserIds { get; private set; } = new HashSet<string>();
+
         public bool ShowEditModal { get; private set; }
 
         public bool ShowAddModal { get; private set; }
@@ -75,16 +74,39 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             UserManager<AppUsers> userManager,
             RoleManager<IdentityRole> roleManager,
             IConfiguration configuration,
-            ILogger<UserList> logger)
+            IWebHostEnvironment environment)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
-            _logger = logger;
+            _environment = environment;
         }
 
         
+        public async Task OnGetAsync()
+        {
+            await LoadUsersAsync();
+        }
+
+        public IActionResult OnGetDownload()
+        {
+            var filePath = Path.Combine(
+                _environment.ContentRootPath,
+                "Files",
+                "lmmuf022xjqu8pidl1eef8lgk.docx");
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound();
+            }
+
+            return PhysicalFile(
+                filePath,
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "lmmuf022xjqu8pidl1eef8lgk.docx");
+        }
+
         public async Task<IActionResult> OnPostEditAsync()
         {
             RemoveModelStateFor(nameof(NewUser));
@@ -120,6 +142,46 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             {
                 succeeded = AddIdentityErrors(await _userManager.AddToRolesAsync(user, rolesToAdd));
             }
+
+            if (succeeded)
+            {
+                var canaryClaims = (await _userManager.GetClaimsAsync(user))
+                    .Where(claim => claim.Type == AppUsers.CanaryAccountClaimType)
+                    .ToList();
+                var hasCanaryClaim = canaryClaims.Any(claim => claim.Value == "true");
+
+                if (Input.IsCanaryAccount && !hasCanaryClaim)
+                {
+                    foreach (var claim in canaryClaims)
+                    {
+                        if (!AddIdentityErrors(await _userManager.RemoveClaimAsync(user, claim)))
+                        {
+                            await transaction.RollbackAsync();
+                            return await RedisplayAsync();
+                        }
+                    }
+
+                    if (!AddIdentityErrors(await _userManager.AddClaimAsync(
+                            user,
+                            new Claim(AppUsers.CanaryAccountClaimType, "true"))))
+                    {
+                        await transaction.RollbackAsync();
+                        return await RedisplayAsync();
+                    }
+                }
+                else if (!Input.IsCanaryAccount)
+                {
+                    foreach (var claim in canaryClaims)
+                    {
+                        if (!AddIdentityErrors(await _userManager.RemoveClaimAsync(user, claim)))
+                        {
+                            await transaction.RollbackAsync();
+                            return await RedisplayAsync();
+                        }
+                    }
+                }
+            }
+
             await transaction.CommitAsync();
             return RedirectToPage();
         }
@@ -148,14 +210,17 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             
             var createResult = await _userManager.CreateAsync(user, password);
             var roleResult = await _userManager.AddToRoleAsync(user, NewUser.Role);
-            var claimResult = await _userManager.AddClaimAsync(
+
+            var changePasswordClaimResult = await _userManager.AddClaimAsync(
                 user,
                 new Claim(AppUsers.MustChangePasswordClaimType, "true"));
+
             var expiryClaimResult = await _userManager.AddClaimAsync(
                 user,
                 new Claim(
                     AppUsers.TemporaryPasswordExpiresAtClaimType,
                     passwordExpiresAt.ToString("O", CultureInfo.InvariantCulture)));
+                    
             if (!AddIdentityErrors(expiryClaimResult))
             {
                 await transaction.RollbackAsync();
@@ -251,6 +316,13 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
             var users = await _userManager.Users
                 .OrderBy(user => user.UserName)
                 .ToListAsync();
+
+            CanaryAccountUserIds = await _dbContext.UserClaims
+                .Where(claim =>
+                    claim.ClaimType == AppUsers.CanaryAccountClaimType &&
+                    claim.ClaimValue == "true")
+                .Select(claim => claim.UserId)
+                .ToHashSetAsync();
 
             var userList = new List<(string Id, string? Login, string? Email, IList<string> Roles)>(users.Count);
             foreach (var user in users)

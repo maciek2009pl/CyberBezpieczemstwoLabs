@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System;
 
 namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
 {
@@ -11,9 +12,18 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
     [AllowAnonymous]
     public class LockoutModel : PageModel
     {
+        public int RemainingSeconds { get; private set; }
 
-        public void OnGet()
+        public void OnGet(DateTimeOffset? lockoutEnd)
         {
+            if (lockoutEnd is DateTimeOffset end)
+            {
+                var remaining = end - DateTimeOffset.UtcNow;
+                if (remaining > TimeSpan.Zero)
+                {
+                    RemainingSeconds = (int)remaining.TotalSeconds;
+                }
+            }
         }
     }
 }

@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using CyberBezpieczemstwoLab.Models;
 using Humanizer;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -49,8 +48,6 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
 
         public string ReturnUrl { get; set; }
 
-        public IList<AuthenticationScheme> ExternalLogins { get; set; }
-
         public class InputModel
         {   
             [Required]
@@ -76,13 +73,27 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
+            string secret = "0x4AAAAAAFyViBfxA64QyMoY0ze2VDUfOBs";
+            string clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+            string browserChallengeToken = null;
+            if (this.Request.Form.TryGetValue("cf-turnstile-response", out var hiddenFormField))
+            {
+                browserChallengeToken = hiddenFormField;
+            }
+            
+            var turnstileApi = new TurnstileService();
+            var verifyResult = await turnstileApi.VerifyAsync(browserChallengeToken, secret, clientIp);
+            if (verifyResult.IsSuccess is false)
+            {
+                this.ModelState.AddModelError("captcha", "The Cloudflare challenge is not valid.");
+                return new BadRequestResult();
+            }
+
             returnUrl ??= Url.Content("~/");
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
                 var user = new AppUsers()

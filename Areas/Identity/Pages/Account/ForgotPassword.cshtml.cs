@@ -41,6 +41,19 @@ namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync()
         {
+            string secret = "0x4AAAAAAFyViBfxA64QyMoY0ze2VDUfOBs";
+            string clientIp = HttpContext.Connection.RemoteIpAddress.ToString();
+            string browserChallengeToken = null;
+            
+            var turnstileApi = new TurnstileService();
+            var verifyResult = await turnstileApi.VerifyAsync(browserChallengeToken, secret, clientIp);
+            if (verifyResult.IsSuccess is false)
+            {
+                this.ModelState.AddModelError("captcha", "The Cloudflare challenge is not valid.");
+                return new BadRequestResult();
+            }
+
+            
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByEmailAsync(Input.Email);

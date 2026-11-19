@@ -5,22 +5,34 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Hosting;
+using CyberBezpieczemstwoLab.Models;
 
 namespace CyberBezpieczemstwoLab.Areas.Identity.Pages.Account
 {
-    [Authorize(Roles = "ADMINISTRATOR")]
+    [Authorize(Roles = "Administrator")]
     public class AdminPanel : PageModel
     {
-        private readonly ILogger<AdminPanel> _logger;
+        private readonly ApplicationDbContext _dbContext;
 
-        public AdminPanel(ILogger<AdminPanel> logger)
+        public AdminPanel(ApplicationDbContext dbContext)
         {
-            _logger = logger;
+            _dbContext = dbContext;
         }
 
-        public void OnGet()
+        public IList<AppUsers> CanaryAccounts { get; private set; } = [];
+
+        public async Task OnGetAsync()
         {
+            CanaryAccounts = await _dbContext.Users
+                .Where(user => _dbContext.UserClaims.Any(claim =>
+                    claim.UserId == user.Id &&
+                    claim.ClaimType == AppUsers.CanaryAccountClaimType &&
+                    claim.ClaimValue == "true"))
+                .OrderBy(user => user.UserName)
+                .ToListAsync();
         }
+        
     }
 }
